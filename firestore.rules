@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isAdmin() { 
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function isValidId(id) { return id is string && id.size() <= 128; }
+
+    // 1. Users
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['firstName', 'lastName', 'phone', 'photoURL'])
+      );
+    }
+
+    // 2. Posts
+    match /posts/{postId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if false;
+    }
+
+    // 3. Stories
+    match /stories/{storyId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+    }
+
+    // 4. Signals (Messaging)
+    match /signals/{signalId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin(); // Only admin can reply
+    }
+
+    // 5. Training Shards
+    match /ai_knowledge/{shardId} {
+      allow read: if isAdmin(); // Only admin manages shards directly
+      allow write: if isAdmin();
+    }
+
+    // 6. Site Settings
+    match /site_settings/{docId} {
+      allow read: if docId == 'main'; // Public info like photos but logic checks tokens in server
+      allow write: if isAdmin();
+    }
+
+    // 7. MFA Codes
+    match /admin_codes/{userId} {
+      allow read, write: if false; // Server only
+    }
+
+    // 8. Admins (RBAC)
+    match /admins/{userId} {
+      allow read: if isSignedIn();
+      allow write: if false; // Cloud Console only
+    }
+
+    // Test collection
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

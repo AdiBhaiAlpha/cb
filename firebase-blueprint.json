@@ -1,0 +1,95 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Registered visitor identity",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "username": { "type": "string" },
+        "phone": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["uid", "email", "username"]
+    },
+    "Post": {
+      "title": "Signal Transmission",
+      "description": "Chitron's public broadcast posts",
+      "type": "object",
+      "properties": {
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "content": { "type": "string" },
+        "mediaUrl": { "type": "string" },
+        "mediaType": { "type": "string", "enum": ["image", "video"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["content", "createdAt"]
+    },
+    "Story": {
+      "title": "Ephemeral Story",
+      "description": "24h temporary media broadcast",
+      "type": "object",
+      "properties": {
+        "authorId": { "type": "string" },
+        "mediaUrl": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "expiresAt": { "type": "number" }
+      },
+      "required": ["mediaUrl", "createdAt", "expiresAt"]
+    },
+    "Signal": {
+      "title": "Messaging Signal",
+      "description": "Bi-directional bridge message",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "content": { "type": "string" },
+        "reply": { "type": "string" },
+         "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["userId", "content", "createdAt"]
+    },
+    "KnowledgeShard": {
+      "title": "Neural Fragment",
+      "description": "Custom training data for ShiPu AI",
+      "type": "object",
+      "properties": {
+        "content": { "type": "string" },
+        "source": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["content"]
+    },
+    "SiteSettings": {
+      "title": "System Secrets",
+      "description": "Encryption keys and global parameters",
+      "type": "object",
+      "properties": {
+        "geminiKey": { "type": "string" },
+        "profilePhoto": { "type": "string" },
+        "coverPhoto": { "type": "string" },
+        "telegramBotToken": { "type": "string" },
+        "telegramAdminId": { "type": "string" },
+        "mfaSecret": { "type": "string" },
+        "mfaEnabled": { "type": "boolean" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profile store" },
+    "/posts/{postId}": { "schema": "Post", "description": "Public content feed" },
+    "/stories/{storyId}": { "schema": "Story", "description": "Temporary media" },
+    "/signals/{signalId}": { "schema": "Signal", "description": "Message bridge" },
+    "/ai_knowledge/{shardId}": { "schema": "KnowledgeShard", "description": "AI memory" },
+    "/site_settings/main": { "schema": "SiteSettings", "description": "Global config" },
+    "/admin_codes/{userId}": { "schema": { "type": "object", "properties": { "code": { "type": "string" }, "expiresAt": { "type": "number" } } }, "description": "TG TOTP store" },
+    "/admins/{userId}": { "schema": { "type": "object", "properties": { "role": { "type": "string" } } }, "description": "RBAC store" }
+  }
+}
