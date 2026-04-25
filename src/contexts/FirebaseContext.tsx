@@ -52,7 +52,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function init() {
       try {
-        const response = await fetch('/firebase-applet-config.json');
+        const response = await fetch('${import.meta.env.BASE_URL}/firebase-applet-config.json');
         if (!response.ok) throw new Error('Config missing');
         const config = await response.json();
         
